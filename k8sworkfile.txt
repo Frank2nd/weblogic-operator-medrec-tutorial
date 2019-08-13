@@ -48,9 +48,11 @@ NAME        STATUS    ROLES     AGE       VERSION
   
 Todo
 ----
+. Destroy all OCI artifacts
+. in Oracle Wercker: delete application (containing the pipeline)
 In doc Kubernetes workshop for compartment medrec
 . Resolve yellow marked sections
-. add Kubernetes workshop for compartment medrec to my GitHUB  https://github.com/Frank2nd/weblogic-operator-medrec-tutorial
+. add doc "Kubernetes workshop for compartment medrec" to my GitHUB  https://github.com/Frank2nd/weblogic-operator-medrec-tutorial
   
 Questionnaire
 -------------  
