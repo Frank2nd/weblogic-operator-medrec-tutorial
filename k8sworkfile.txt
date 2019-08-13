@@ -1,0 +1,115 @@
+>>stuck on step 4 kubectl apply -f /u01/content/medrec-domain/domain.yaml faalt
+Error Output
+$ kubectl get pod -n medrec-domain1-ns --output=yaml
+error message 
+  message: Back-off pulling image "fra.ocir.io/medrec/weblogic-operator-tutorial:latest"
+          reason: ImagePullBackOff
+Questions:
+. does it call implicetely Dockerfile.create from my GIT: https://github.com/Frank2nd/weblogic-operator-medrec-tutorial
+  If so where/how im my git link stored?
+. How can you verify the content of fra.ocir.io/medrec/weblogic-operator-tutorial:latest
+  where is this link captured?
+What went ok?
+-------------
+. Creation of an OKE cluster
+. configuration of CLI on the VB and the connection to the OKE cluster
+
+  proof
+  $ kubectl get node
+NAME        STATUS    ROLES     AGE       VERSION
+10.0.10.2   Ready     node      2d        v1.13.5
+10.0.11.2   Ready     node      2d        v1.13.5
+10.0.12.2   Ready     node      2d        v1.13.5
+
+. The creation of a repository within a custom docker registry with the build-domain-in-home-image: 
+  through a Pipeline within Oracle Wercker
+  which runs Docker build to create custom WebLogic container image 
+
+  proof within OCI weblogic-operator-medrec-tutorial with full path darwin/weblogic-operator-medrec-tutorial:latest
+
+. Install of a weblogic operator via helm 
+
+   proof 
+   $ helm list sample-weblogic-operator
+   oracle@localhost medrec-domain]$ helm list medrec-weblogic-operator
+   NAME                    	REVISION	UPDATED                 	STATUS  	CHART              	NAMESPACE                  
+   medrec-weblogic-operator	2       	Mon Aug 12 10:37:52 2019	DEPLOYED	weblogic-operator-2	medrec-weblogic-operator-ns
+
+. install of a lb (traefik)  
+  Proof
+  $ kubectl get service -n traefik
+   NAME                         TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                      AGE
+   traefik-operator             LoadBalancer   10.96.134.83    132.145.237.95   80:32204/TCP,443:31257/TCP   19h
+   traefik-operator-dashboard   ClusterIP      10.96.245.128   <none>           80/TCP                       19h
+  $ helm list
+  NAME                    	REVISION	UPDATED                 	STATUS  	CHART              	NAMESPACE                  
+  medrec-weblogic-operator	2       	Mon Aug 12 10:37:52 2019	DEPLOYED	weblogic-operator-2	medrec-weblogic-operator-ns
+  traefik-operator        	2       	Mon Aug 12 10:39:08 2019	DEPLOYED	traefik-1.75.1     	traefik                    
+  
+Todo
+----
+In doc Kubernetes workshop for compartment medrec
+. Resolve yellow marked sections
+. add Kubernetes workshop for compartment medrec to my GitHUB  https://github.com/Frank2nd/weblogic-operator-medrec-tutorial
+  
+Questionnaire
+-------------  
+. can you access the generated compute nodes via SSH
+  . None of them has a public IP (through a hub?)
+  . Does it require a SSH key - did I miss that step
+  . Which account/password?
+. Is there a k8s GUI available on one of these nodes?
+. can you start/stop the instances without loosing data - are all k8s programs automaitically started?
+. Wat is Oracle Wercker?
+
+
+Workarea
+---------  
+kubectl apply -f /u01/content/medrec-domain/domain.yaml
+cp /u01/content/weblogic-kubernetes-operator/kubernetes/samples/scripts/create-weblogic-domain/manually-create-domain/domain.yaml /u01/content/medrec-domain/domain.yaml
+
+cat << EOF | kubectl apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: helm-user-cluster-admin-role
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: kube-system
+EOF
+
+helm install kubernetes/charts/weblogic-operator \
+  --name medrec-weblogic-operator \
+  --namespace medrec-weblogic-operator-ns \
+  --set image=oracle/weblogic-kubernetes-operator:2.0 \
+  --set serviceAccount=medrec-weblogic-operator-sa \
+  --set "domainNamespaces={}"
+  
+curl -H 'host: traefik.example.com' http://132.145.237.95
+
+kubectl delete secret docker-registry ocirsecret \
+-n medrec-domain1-ns \
+  --docker-server=fra.ocir.io \
+  --docker-username='darwin/frank.brink@darwin-it.nl' \
+  --docker-password='5}kb<zh3rvKQSz:orM]s' \
+  --docker-email='frank.brink@darwin-it.nl'
+
+  kubectl create secret docker-registry ocirsecret \
+  -n m10akker-domain1-ns \
+  --docker-server=fra.ocir.io \
+  --docker-username='makkerk8s/oracleidentitycloudservice/martien.van.den.akker@darwin-it.nl' \
+  --docker-password='B8LK]yw9A7]dC.GKWvuj' \
+  --docker-email='martien.van.den.akker@darwin-it.nl'
+
+kubectl create secret docker-registry ocirsecretcompartment \
+  -n medrec-domain1-ns \
+  --docker-server=fra.ocir.io \
+  --docker-username='medrec/frank.brink@darwin-it.nl' \
+  --docker-password='5}kb<zh3rvKQSz:orM]s' \
+  --docker-email='frank.brink@darwin-it.nl'
+  
